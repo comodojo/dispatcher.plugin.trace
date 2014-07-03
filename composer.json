@@ -1,0 +1,15 @@
+{
+    "name": "comodojo/dispatcher.plugin.trace",
+    "description": "Trace plugin for comodojo/dispatcher.framework",
+    "type": "dispatcher-plugin",
+    "authors": [
+        {
+            "name": "comodojo",
+            "email": "info@comodojo.org"
+        }
+    ],
+    "extra": {
+        "comodojo-plugin-load": "trace",
+        "comodojo-folders-create": "traces"
+    }   
+}
