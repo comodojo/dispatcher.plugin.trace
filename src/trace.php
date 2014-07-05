@@ -1,11 +1,11 @@
-<?php namespace comodojo\TracePlugin;
+<?php namespace comodojo\DispatcherPlugin;
 
 /**
  * A plugin to trace request/route/response to file
  * 
- * @package 	Comodojo dispatcher (Spare Parts)
+ * @package		Comodojo dispatcher (Spare Parts)
  * @author		comodojo <info@comodojo.org>
- * @license 	GPL-3.0+
+ * @license		GPL-3.0+
  *
  * LICENSE:
  * 
@@ -59,7 +59,7 @@ class trace {
 
 	public function trace_request($ObjectRequest) {
 
-		\comodojo\debug("Tracing request","INFO","trace");
+		\comodojo\Dispatcher\debug("Tracing request","INFO","trace");
 
 		$service = $ObjectRequest->getService();
 
@@ -83,7 +83,7 @@ class trace {
 
 		if ( $ObjectRoute->getParameter("trace") || DISPATCHER_TRACES_EVERYTHING ) {
 
-			\comodojo\debug("Tracing route","INFO","trace");
+			\comodojo\Dispatcher\debug("Tracing route","INFO","trace");
 
 			$this->content .= "****** ROUTE ******\n";
 
@@ -101,7 +101,7 @@ class trace {
 
 		else {
 
-			\comodojo\debug("Tracing disabled for current service, discarding current trace","INFO","trace");
+			\comodojo\Dispatcher\debug("Tracing disabled for current service, discarding current trace","INFO","trace");
 
 			$this->should_trace = false;
 
@@ -113,7 +113,7 @@ class trace {
 
 		if ( $this->should_trace === true OR DISPATCHER_TRACES_EVERYTHING === true ) {
 
-			\comodojo\debug("Tracing result","INFO","trace");
+			\comodojo\Dispatcher\debug("Tracing result","INFO","trace");
 
 			$this->content .= "++++++ RESULT ++++++\n";
 
@@ -139,7 +139,7 @@ class trace {
 
 		$writedown = file_put_contents($file, $this->content, FILE_APPEND);
 
-		if ( $writedown === false ) \comodojo\debug('Could not write log file!','ERROR','trace');
+		if ( $writedown === false ) \comodojo\Dispatcher\debug('Could not write log file!','ERROR','trace');
 
 	}
 
