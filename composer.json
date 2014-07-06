@@ -1,5 +1,5 @@
 {
-    "name": "comodojo/dispatcher.plugin.trace",
+    "name": "comodojo/dispatcher.plugin.tracer",
     "description": "Trace plugin for comodojo/dispatcher.framework",
     "type": "dispatcher-plugin",
     "authors": [
@@ -9,7 +9,7 @@
         }
     ],
     "extra": {
-        "comodojo-plugin-load": "trace",
+        "comodojo-plugin-load": "tracer",
         "comodojo-folders-create": "traces"
     }   
 }

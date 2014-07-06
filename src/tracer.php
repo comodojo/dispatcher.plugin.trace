@@ -29,7 +29,7 @@ define("DISPATCHER_TRACES_PATH", DISPATCHER_REAL_PATH."traces/");
 
 define("DISPATCHER_TRACES_EVERYTHING", false);
 
-class trace {
+class tracer {
 
 	private $content = '';
 
@@ -40,6 +40,8 @@ class trace {
 	public function __construct($time) {
 
 		$current_time = $time;
+
+		\comodojo\Dispatcher\debug("Tracer online, current time: ".$this->time_init,"INFO","tracer");
 
 		$this->content .= "*************************\n";
 		$this->content .= "****** TRACE START ******\n";
@@ -59,7 +61,7 @@ class trace {
 
 	public function trace_request($ObjectRequest) {
 
-		\comodojo\Dispatcher\debug("Tracing request","INFO","trace");
+		\comodojo\Dispatcher\debug("Tracing request","INFO","tracer");
 
 		$service = $ObjectRequest->getService();
 
@@ -83,7 +85,7 @@ class trace {
 
 		if ( $ObjectRoute->getParameter("trace") || DISPATCHER_TRACES_EVERYTHING ) {
 
-			\comodojo\Dispatcher\debug("Tracing route","INFO","trace");
+			\comodojo\Dispatcher\debug("Tracing route","INFO","tracer");
 
 			$this->content .= "****** ROUTE ******\n";
 
@@ -101,7 +103,7 @@ class trace {
 
 		else {
 
-			\comodojo\Dispatcher\debug("Tracing disabled for current service, discarding current trace","INFO","trace");
+			\comodojo\Dispatcher\debug("Tracing disabled for current service, discarding current trace","INFO","tracer");
 
 			$this->should_trace = false;
 
@@ -113,7 +115,7 @@ class trace {
 
 		if ( $this->should_trace === true OR DISPATCHER_TRACES_EVERYTHING === true ) {
 
-			\comodojo\Dispatcher\debug("Tracing result","INFO","trace");
+			\comodojo\Dispatcher\debug("Tracing result","INFO","tracer");
 
 			$this->content .= "++++++ RESULT ++++++\n";
 
@@ -139,13 +141,13 @@ class trace {
 
 		$writedown = file_put_contents($file, $this->content, FILE_APPEND);
 
-		if ( $writedown === false ) \comodojo\Dispatcher\debug('Could not write log file!','ERROR','trace');
+		if ( $writedown === false ) \comodojo\Dispatcher\debug('Could not write log file!','ERROR','tracer');
 
 	}
 
 }
 
-$t = new trace($dispatcher->getCurrentTime());
+$t = new tracer($dispatcher->getCurrentTime());
 
 $dispatcher->addHook("dispatcher.request", $t, "trace_request");
 
