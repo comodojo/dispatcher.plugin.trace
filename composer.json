@@ -1,10 +1,23 @@
 {
     "name": "comodojo/dispatcher.plugin.tracer",
     "description": "Trace plugin for comodojo/dispatcher.framework",
+    "license": "GPL-3.0+",
     "type": "dispatcher-plugin",
+    "keywords": [
+        "comodojo",
+        "dispatcher",
+        "plugin",
+        "tracer",
+        "trace",
+        "service"
+    ],
+    "homepage": "http://dispatcher.comodojo.org",
+     "support": {
+        "issues": "https://github.com/comodojo/dispatcher.plugin.tracer/issues"
+    },
     "authors": [
         {
-            "name": "comodojo",
+            "name": "Marco Giovinazzi",
             "email": "info@comodojo.org"
         }
     ],
