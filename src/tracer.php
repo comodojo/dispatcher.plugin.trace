@@ -41,7 +41,7 @@ class tracer {
 
 		$current_time = $time;
 
-		\comodojo\Dispatcher\debug("Tracer online, current time: ".$this->time_init,"INFO","tracer");
+		\comodojo\Dispatcher\debug("Tracer online, current time: ".$current_time,"INFO","tracer");
 
 		$this->content .= "*************************\n";
 		$this->content .= "****** TRACE START ******\n";
