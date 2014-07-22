@@ -47,7 +47,7 @@ class Tracer {
 
         $current_time = $dispatcherInstance->getCurrentTime();
 
-        $this->should_trace_everything = defined('DISPATCHER_TRACES_EVERYTHING') ? filter_var(DISPATCHER_TRACES_EVERYTHING, FILTER_VALIDATE_BOOLEAN) ? false;
+        $this->should_trace_everything = defined('DISPATCHER_TRACES_EVERYTHING') ? filter_var(DISPATCHER_TRACES_EVERYTHING, FILTER_VALIDATE_BOOLEAN) : false;
 
         $this->traces_path = DISPATCHER_REAL_PATH."traces/";
 
