@@ -1,11 +1,11 @@
-<?php namespace comodojo\DispatcherPlugin;
+<?php namespace Comodojo\DispatcherPlugin;
 
 /**
  * A plugin to trace request/route/response to file
  * 
- * @package		Comodojo dispatcher (Spare Parts)
- * @author		comodojo <info@comodojo.org>
- * @license		GPL-3.0+
+ * @package     Comodojo dispatcher (Spare Parts)
+ * @author      comodojo <info@comodojo.org>
+ * @license     GPL-3.0+
  *
  * LICENSE:
  * 
@@ -25,134 +25,160 @@
 
 global $dispatcher;
 
-define("DISPATCHER_TRACES_PATH", DISPATCHER_REAL_PATH."traces/");
+class Tracer {
 
-define("DISPATCHER_TRACES_EVERYTHING", false);
+    private $content = '';
 
-class tracer {
+    private $service = "default";
 
-	private $content = '';
+    private $can_trace = true;
 
-	private $service = "default";
+    private $should_trace = true;
 
-	private $should_trace = false;
+    private $should_trace_everything = false;
 
-	public function __construct($time) {
+    private $traces_path = false;
 
-		$current_time = $time;
+    private $logger = false;
 
-		\comodojo\Dispatcher\debug("Tracer online, current time: ".$current_time,"INFO","tracer");
+    public function __construct($dispatcherInstance) {
 
-		$this->content .= "*************************\n";
-		$this->content .= "****** TRACE START ******\n";
+        $this->logger = $dispatcherInstance->getLogger();
 
-		$this->content .= " >> REQUEST FROM " . $_SERVER["REMOTE_ADDR"] . " AT " . $current_time . " <<\n";
+        $current_time = $dispatcherInstance->getCurrentTime();
 
-	}
+        $this->should_trace_everything = defined('DISPATCHER_TRACES_EVERYTHING') ? filter_var(DISPATCHER_TRACES_EVERYTHING, FILTER_VALIDATE_BOOLEAN) ? false;
 
-	public function __destruct() {
+        $this->traces_path = DISPATCHER_REAL_PATH."traces/";
 
-		$this->content .= "******* TRACE END *******\n";
-		$this->content .= "*************************\n\n";
+        if ( !is_writable($this->traces_path) ) {
 
-		if ( $this->should_trace || DISPATCHER_TRACES_EVERYTHING ) $this->write_content();
+            $this->logger->error('Traces path not writeable, shutting down tracer');
 
-	}
+            $this->can_trace = false;
 
-	public function trace_request($ObjectRequest) {
+        } else {
 
-		\comodojo\Dispatcher\debug("Tracing request","INFO","tracer");
+            $this->logger->info('Tracer online, request time: '.$this->current_time);
 
-		$service = $ObjectRequest->getService();
+            $this->content .= "*************************\n";
+            $this->content .= "****** TRACE START ******\n";
 
-		$this->service = empty($service) ? $this->service : $service;
+            $this->content .= " >> REQUEST FROM " . $_SERVER["REMOTE_ADDR"] . " AT " . $current_time . " <<\n";
 
-		$this->content .= "------ REQUEST ------\n";
+        }
 
-		$this->content .= "- Client requested service: " . $service . "\n";
+    }
 
-		$this->content .= "- Client provided attributes: \n" . var_export($ObjectRequest->getAttributes(), true) . "\n";
+    public function __destruct() {
 
-		$this->content .= "- Client request's method: " . $ObjectRequest->getMethod() . "\n";
+        if ( !$this->can_trace ) return;
 
-		$this->content .= "- Client provided parameters: \n" . var_export($ObjectRequest->getParameters(), true) . "\n";
+        $this->content .= "******* TRACE END *******\n";
+        $this->content .= "*************************\n\n";
 
-		$this->content .= "- Request headers: \n" . var_export($ObjectRequest->getHeaders(), true) . "\n";
+        if ( $this->should_trace || $this->should_trace_everything ) $this->writeTrace();
 
-	}
+    }
 
-	public function trace_route($ObjectRoute) {
+    public function traceRequest($ObjectRequest) {
 
-		if ( $ObjectRoute->getParameter("trace") || DISPATCHER_TRACES_EVERYTHING ) {
+        if ( !$this->can_trace ) return;
 
-			\comodojo\Dispatcher\debug("Tracing route","INFO","tracer");
+        $this->logger->debug('Tracing request');
 
-			$this->content .= "****** ROUTE ******\n";
+        $service = $ObjectRequest->getService();
 
-			$this->content .= "* Server route source:" . $ObjectRoute->getService() . "\n";
+        $this->service = empty($service) ? $this->service : $service;
 
-			$this->content .= "* Server route target::class:" . $ObjectRoute->getTarget() . "::" . $ObjectRoute->getClass() . "\n";
+        $this->content .= "------ REQUEST ------\n";
 
-			$this->content .= "* Server route type:" . $ObjectRoute->getType() . "\n";
+        $this->content .= "- Client requested service: " . $service . "\n";
 
-			$this->content .= "* Server cache method:" . $ObjectRoute->getCache() . "\n";
+        $this->content .= "- Client provided attributes: \n" . var_export($ObjectRequest->getAttributes(), true) . "\n";
 
-			$this->should_trace = true;
+        $this->content .= "- Client request's method: " . $ObjectRequest->getMethod() . "\n";
 
-		}
+        $this->content .= "- Client provided parameters: \n" . var_export($ObjectRequest->getParameters(), true) . "\n";
 
-		else {
+        $this->content .= "- Request headers: \n" . var_export($ObjectRequest->getHeaders(), true) . "\n";
 
-			\comodojo\Dispatcher\debug("Tracing disabled for current service, discarding current trace","INFO","tracer");
+    }
 
-			$this->should_trace = false;
+    public function traceRoute($ObjectRoute) {
 
-		}
+        if ( !$this->can_trace ) return;
 
-	}
+        if ( $ObjectRoute->getParameter("trace") || $this->should_trace_everything ) {
 
-	public function trace_result($ObjectResult) {
+            $this->logger->debug('Tracing route');
 
-		if ( $this->should_trace === true OR DISPATCHER_TRACES_EVERYTHING === true ) {
+            $this->content .= "****** ROUTE ******\n";
 
-			\comodojo\Dispatcher\debug("Tracing result","INFO","tracer");
+            $this->content .= "* Server route source:" . $ObjectRoute->getService() . "\n";
 
-			$this->content .= "++++++ RESULT ++++++\n";
+            $this->content .= "* Server route target::class:" . $ObjectRoute->getTarget() . "::" . $ObjectRoute->getClass() . "\n";
 
-			$this->content .= "+ Result status code:" . $ObjectResult->getStatusCode() . "\n";
+            $this->content .= "* Server route type:" . $ObjectRoute->getType() . "\n";
 
-			$this->content .= "+ Result location (if any):" . $ObjectResult->getLocation() . "\n";
+            $this->content .= "* Server cache method:" . $ObjectRoute->getCache() . "\n";
 
-			$this->content .= "+ Result content type:" . $ObjectResult->getContentType() . "\n";
+            $this->should_trace = true;
 
-			$this->content .= "+ Result charser:" . $ObjectResult->getCharset() . "\n";
+        }
 
-			$this->content .= "+ Result headers: \n" . var_export($ObjectResult->getHeaders(),true) . "\n";
+        else {
 
-			$this->content .= "+ Result status code: \n" . $ObjectResult->getContent() . "\n";
+            $this->logger->debug('Tracing disabled for current service, discarding current trace');
 
-		}
+            $this->should_trace = false;
 
-	}
+        }
 
-	private function write_content() {
+    }
 
-		$file = DISPATCHER_TRACES_PATH.$this->service.".trace";
+    public function traceResult($ObjectResult) {
 
-		$writedown = file_put_contents($file, $this->content, FILE_APPEND);
+        if ( !$this->can_trace ) return;
 
-		if ( $writedown === false ) \comodojo\Dispatcher\debug('Could not write log file!','ERROR','tracer');
+        if ( $this->should_trace OR $this->should_trace_everything ) {
 
-	}
+            $this->logger->debug('Tracing result');
+
+            $this->content .= "++++++ RESULT ++++++\n";
+
+            $this->content .= "+ Result status code:" . $ObjectResult->getStatusCode() . "\n";
+
+            $this->content .= "+ Result location (if any):" . $ObjectResult->getLocation() . "\n";
+
+            $this->content .= "+ Result content type:" . $ObjectResult->getContentType() . "\n";
+
+            $this->content .= "+ Result charser:" . $ObjectResult->getCharset() . "\n";
+
+            $this->content .= "+ Result headers: \n" . var_export($ObjectResult->getHeaders(),true) . "\n";
+
+            $this->content .= "+ Result status code: \n" . $ObjectResult->getContent() . "\n";
+
+        }
+
+    }
+
+    private function writeTrace() {
+
+        $file = $this->traces_path.$this->service.".trace";
+
+        $writedown = file_put_contents($file, $this->content, FILE_APPEND);
+
+        if ( $writedown === false ) $this->logger->error('Could not write log file', array('LOGFILE' => $file));
+
+    }
 
 }
 
-$t = new tracer($dispatcher->getCurrentTime());
+$t = new Tracer($dispatcher);
 
-$dispatcher->addHook("dispatcher.request", $t, "trace_request");
+$dispatcher->addHook("dispatcher.request", $t, "traceRequest");
 
-$dispatcher->addHook("dispatcher.serviceroute.#", $t, "trace_route");
+$dispatcher->addHook("dispatcher.serviceroute.#", $t, "traceRoute");
 
-$dispatcher->addHook("dispatcher.result.#", $t, "trace_result");
-
-?>
+$dispatcher->addHook("dispatcher.result.#", $t, "traceResult");

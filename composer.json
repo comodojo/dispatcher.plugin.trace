@@ -22,7 +22,7 @@
         }
     ],
     "extra": {
-        "comodojo-plugin-load": "tracer",
+        "comodojo-plugin-load": "Tracer",
         "comodojo-folders-create": "traces"
     }   
 }
